@@ -1,14 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { RewardCelebration, type RewardKind } from "@/components/RewardCelebration";
+import { RewardVault } from "@/components/RewardVault";
+import { RewardReveal } from "@/components/RewardReveal";
+import { RewardStage } from "@/components/RewardStage";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "iClub – Ödül Kazanma Animasyonu" },
-      { name: "description", content: "iClub sadakat uygulaması için yeniden tasarlanan ödül kazanma deneyimi." },
-      { property: "og:title", content: "iClub – Ödül Kazanma Animasyonu" },
-      { property: "og:description", content: "Dijital Kod ve Ödül Bakiyesi için kutlama animasyonları." },
+      { title: "iClub – Ödül Kazanma Deneyimleri" },
+      { name: "description", content: "iClub sadakat uygulaması için üç yaratıcı ödül kazanma konsepti: Ödül Kasası, Sürpriz Ödül ve Ödülün Sahnesi." },
+      { property: "og:title", content: "iClub – Ödül Kazanma Deneyimleri" },
+      { property: "og:description", content: "Dijital Kod ve Ödül Bakiyesi için üç farklı kutlama konsepti." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -22,7 +25,16 @@ const REWARDS: Reward[] = [
   { id: "b", brand: "amazon", kind: "code", title: "Dijital Kod", desc: "Amazon'da geçerli 200 TL hediye", amount: 200 },
 ];
 
+type ConceptId = "vault" | "reveal" | "stage" | "classic";
+const CONCEPTS: { id: ConceptId; label: string; hint: string }[] = [
+  { id: "vault", label: "1 · Ödül Kasası", hint: "Enerji biriken kasa açılır, altın ışıklar saçılır" },
+  { id: "reveal", label: "2 · Sürpriz Ödül", hint: "Hareketli hediye kutusu açılır, kart yükselir" },
+  { id: "stage", label: "3 · Ödülün Sahnesi", hint: "Tam ekran premium sahne, 3D ödül kartı" },
+  { id: "classic", label: "Mevcut Tasarım", hint: "Karşılaştırma için eski kutlama ekranı" },
+];
+
 function Index() {
+  const [concept, setConcept] = useState<ConceptId>("vault");
   const [loading, setLoading] = useState<string | null>(null);
   const [active, setActive] = useState<Reward | null>(null);
   const [claimed, setClaimed] = useState<string[]>([]);
@@ -40,12 +52,29 @@ function Index() {
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-muted px-4 py-10 font-sans">
       <div className="text-center">
         <h1 className="text-2xl font-extrabold text-brand-purple-deep">Ödül Kazanma Deneyimi</h1>
-        <p className="text-sm text-muted-foreground">Bir karttaki "Ödülünü Al" butonuna dokunun.</p>
+        <p className="text-sm text-muted-foreground">Bir konsept seçin, sonra karttaki "Ödülünü Al" butonuna dokunun.</p>
         {claimed.length > 0 && (
           <button onClick={() => setClaimed([])} className="mt-2 text-xs font-bold text-brand-pink underline">
             Sıfırla
           </button>
         )}
+      </div>
+
+      <div className="grid w-full max-w-[380px] grid-cols-2 gap-2">
+        {CONCEPTS.map((c) => (
+          <button
+            key={c.id}
+            onClick={() => setConcept(c.id)}
+            title={c.hint}
+            className={`rounded-2xl px-3 py-2.5 text-left text-xs font-extrabold shadow-card transition active:scale-95 ${
+              concept === c.id
+                ? "bg-brand-gradient text-brand-cream"
+                : "bg-background text-brand-purple-deep"
+            }`}
+          >
+            {c.label}
+          </button>
+        ))}
       </div>
 
       <div className="relative h-[780px] w-[380px] overflow-hidden rounded-[48px] border-[10px] border-brand-purple-deep bg-brand-cream shadow-card">
@@ -116,7 +145,16 @@ function Index() {
           ))}
         </div>
 
-        {active && (
+        {active && concept === "vault" && (
+          <RewardVault key={active.id} kind={active.kind} amount={active.amount} onClose={() => setActive(null)} />
+        )}
+        {active && concept === "reveal" && (
+          <RewardReveal key={active.id} kind={active.kind} amount={active.amount} onClose={() => setActive(null)} />
+        )}
+        {active && concept === "stage" && (
+          <RewardStage key={active.id} kind={active.kind} amount={active.amount} onClose={() => setActive(null)} />
+        )}
+        {active && concept === "classic" && (
           <RewardCelebration key={active.id} kind={active.kind} amount={active.amount} onClose={() => setActive(null)} />
         )}
       </div>
